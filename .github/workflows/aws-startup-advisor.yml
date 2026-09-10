@@ -3,8 +3,15 @@ name: aws-startup-advisor
 # Gates owned by the aws-startup-advisor plugin. The repo-wide Build workflow covers
 # markdown, manifests, spec conformance, and secret scanning; these are the checks that
 # are specific to this plugin's content (its DSL frontmatter contract, its pinned model
-# ids, its replay fixtures, and its vendored-copy sync contract). Path-scoped so a change
-# anywhere else in the repository does not pay for them.
+# ids, its replay fixtures, and its vendored-copy sync contract).
+#
+# Path-scoped on `push` and `pull_request` so a change anywhere else in the repository
+# does not pay for them. `merge_group` cannot take a `paths` filter in GitHub Actions, so
+# queued merges do run these checks regardless of what they touch.
+#
+# MUST NOT be added to the branch ruleset as a required status check: a path-filtered
+# workflow reports no status at all when it does not match, so any PR that leaves this
+# plugin untouched would wait on a check that never runs and could never merge.
 
 on:
   push:
