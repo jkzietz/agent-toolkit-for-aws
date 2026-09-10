@@ -38,3 +38,29 @@ jobs:
         with:
           # Shared Amazon OSPO dependency-review config used across awslabs/aws repos.
           config-file: amazon-ospo/dependency-review-config/default/dependency-review-config.yml@8e4c9fdde54d2b7c6a3a28b97eddd26c4cd90a66 # main
+          # typing-extensions is exempted because its reported licence is bad scanner
+          # data, not a real licence problem. GitHub sources PyPI licences from
+          # ClearlyDefined, whose ScanCode run over typing_extensions' LICENSE emits:
+          #
+          #   Python-2.0 AND GPL-1.0-or-later AND Python-2.0 AND BSD-3-Clause
+          #   AND Python-2.0 AND BSD-3-Clause AND 0BSD
+          #
+          # Every term there is on the OSPO allowlist except GPL-1.0-or-later, and
+          # because it is an AND expression the one bad term fails the whole package.
+          # That term is a false positive: the file is the standard PSF licence, whose
+          # historical-notes table discusses which Python releases are GPL-*compatible*
+          # and states outright "GPL-compatible doesn't mean that we're distributing
+          # Python under the GPL". ScanCode matches the prose, not a grant. The package's
+          # own PEP 639 metadata declares `license_expression = "PSF-2.0"`.
+          #
+          # There is no way to avoid the dependency or pin around it: typing-extensions
+          # is transitive via anyio, openai, pydantic, pydantic-core, referencing,
+          # typing-inspection and exceptiongroup, and versions <= 4.13.2 report
+          # `Python-2.0.1` — a distinct SPDX id that is also absent from the allowlist.
+          # `PSF-2.0` is absent too, so even a corrected ClearlyDefined record would not
+          # pass without an allowlist change.
+          #
+          # Durable fix is an OSPO allowlist addition (PSF-2.0 / Python-2.0.1 alongside
+          # the already-allowed Python-2.0); this input is the scoped stopgap. It grants
+          # an exception to this one package only and does not weaken policy elsewhere.
+          allow-dependencies-licenses: pkg:pypi/typing-extensions

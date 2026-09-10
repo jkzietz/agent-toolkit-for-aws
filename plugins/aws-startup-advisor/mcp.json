@@ -1,0 +1,32 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "awsknowledge": {
+      "type": "streamable-http",
+      "url": "https://knowledge-mcp.global.api.aws"
+    },
+    "awspricing": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-pricing-mcp-server@latest"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_REGION": "us-east-1"
+      }
+    },
+    "temporal-docs": {
+      "type": "streamable-http",
+      "url": "https://temporal.mcp.kapa.ai"
+    },
+    "aws-pricing-calculator": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "sample-aws-pricing-calculator-mcp@1.2.8"
+      ]
+    }
+  }
+}

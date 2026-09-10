@@ -1,0 +1,13 @@
+# markdownlint-cli2 options for plugins/aws-startup-advisor (this directory and below).
+#
+# The repository root config governs the rest of the repo; this file only adjusts
+# the two things that differ for this plugin's tree. Rule configuration lives in
+# .markdownlint.yaml beside this file.
+#
+# frontMatter: this plugin's skills carry structured YAML frontmatter (phase,
+# fragment, and assembler declarations with nested sequences), so the frontmatter
+# block must be excluded from linting. The pattern below matches it; without it
+# the YAML is linted as Markdown body and reports MD007/MD032/MD037/MD049 on
+# frontmatter lines — and `--fix` rewrites the YAML, breaking the frontmatter
+# validator these files are checked against.
+frontMatter: "^---\\n[\\s\\S]*?\\n---\\n"
