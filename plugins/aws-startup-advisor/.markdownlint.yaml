@@ -1,0 +1,47 @@
+# markdownlint rule configuration for plugins/aws-startup-advisor (this directory and below).
+#
+# Carried over from awslabs/startups, where this content was authored. The rules
+# disabled here are ones this plugin's authoring style intentionally diverges on:
+# long knowledge-base lines (MD013), bare URLs in citations (MD034), bold-as-label
+# headings in the DSL phase files (MD036), untagged fences in example output
+# (MD040), and skill files that open with frontmatter rather than an H1 (MD041).
+#
+# Options (frontMatter, globs) live in .markdownlint-cli2.yaml beside this file.
+default: true
+
+MD003:
+  style: "atx"
+MD009:
+  br_spaces: 2
+  list_item_empty_lines: true
+MD010:
+  code_blocks: false
+MD013: false
+MD022: false
+MD024:
+  siblings_only: true
+MD025:
+  level: 1
+MD026: false
+MD033:
+  allowed_elements:
+    - "br"
+    - "details"
+    - "summary"
+    - "kbd"
+    - "img"
+    - "sub"
+    - "sup"
+MD034: false
+MD036: false
+MD040: false
+MD041: false
+MD046:
+  style: "fenced"
+MD048:
+  style: "backtick"
+# MD059 (descriptive link text) and MD060 are new in markdownlint 0.38 / cli2 0.18
+# and were not enforced on this content upstream. Disabled to keep the migration
+# mechanical; fixing the ~29 "[here]" links is tracked as follow-up cleanup.
+MD059: false
+MD060: false
