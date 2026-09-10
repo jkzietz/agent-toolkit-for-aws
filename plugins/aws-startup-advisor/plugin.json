@@ -77,7 +77,7 @@
   ],
   "extensions": {
     "com.anthropic.claude-code": {
-      "hooks": "./hooks/hooks.json"
+      "hooks": "./com.anthropic.claude-code/hooks/hooks.json"
     }
   }
 }

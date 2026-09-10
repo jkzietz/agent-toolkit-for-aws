@@ -1,7 +1,17 @@
 # Bandit configuration scoped to this plugin only.
-# Loaded explicitly in .github/workflows/security-scanners.yml via `bandit -c`,
+# Loaded explicitly in .github/workflows/aws-startup-advisor.yml via `bandit -c`,
 # so these skips apply only when scanning files under this plugin directory.
 # Python anywhere else in the repo is scanned separately with no skips.
+#
+# Skipped directories:
+#   .venv - `uv run --project <scriptsDir>` (the pinned toolchain the llm-to-bedrock
+#           and agent-advisor flows run through) materialises a virtualenv inside the
+#           scripts directory. Without this exclusion, a `-r .` scan walks into
+#           site-packages and fails on third-party findings (pickle, eval, bare
+#           except) that are not ours to fix. uv writes `.venv/.gitignore` so git
+#           never sees it, which is exactly why bandit has to be told separately.
+exclude_dirs:
+  - "*/.venv/*"
 #
 # Why each rule is skipped:
 #   B101 - pytest uses the assert statement as its assertion mechanism; the
