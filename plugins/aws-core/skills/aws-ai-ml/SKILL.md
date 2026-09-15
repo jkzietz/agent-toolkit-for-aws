@@ -3,20 +3,20 @@ name: aws-ai-ml
 description: >
   Selects, deploys, and customizes AI models on Amazon SageMaker. Fine-tuning
   (SFT, DPO, RLVR, RLAIF), model selection, dataset preparation, evaluation,
-  deployment to SageMaker endpoints or Bedrock, and endpoint diagnostics. Covers
-  the full lifecycle from planning through production. Use when fine-tuning
-  models on SageMaker, choosing/selecting which base model to customize or
-  fine-tune from SageMaker Hub, finding a model to deploy without fine-tuning,
-  transforming datasets for training, checking
-  data readiness, evaluating model quality, deploying to endpoints, setting up
-  IAM roles and S3 buckets for training jobs, or managing a SageMaker Managed
-  MLflow app. Also use to check endpoint health, diagnose failures, debug
-  latency or errors, or view container logs and CloudWatch metrics. Covers
-  Serverless Model Customization, Nova and OSS deployment paths, and PySDK v3
-  usage. NOT for Ground Truth labeling, Feature Store, or general-purpose AWS
-  infrastructure.
+  deployment to SageMaker endpoints or Bedrock, inference optimization and
+  endpoint diagnostics. Covers the full lifecycle from planning through
+  production. Use when fine-tuning models on SageMaker, choosing/selecting which
+  base model to customize or fine-tune from SageMaker Hub, finding a model to
+  deploy without fine-tuning, transforming datasets for training, checking data
+  readiness, evaluating model quality, deploying to endpoints, benchmarking or
+  optimizing inference, setting up IAM roles and S3 buckets for training jobs,
+  or managing a SageMaker Managed MLflow app. Also use to check endpoint health,
+  diagnose failures, debug latency or errors, or view container logs and
+  CloudWatch metrics. Covers Serverless Model Customization, Nova and OSS
+  deployment paths, and PySDK v3. NOT for Ground Truth labeling, Feature Store,
+  or general-purpose AWS infrastructure.
 metadata:
-  version: "3"
+  version: "4"
 ---
 
 # AWS AI/ML Model Customization
@@ -37,7 +37,7 @@ Match the user's intent to the appropriate reference folder and load only that c
 | Transform or convert a dataset between formats | [references/dataset-transformation/](references/dataset-transformation/) | User says "transform", "convert", "reformat", or dataset schema needs to change. Always use this rather than writing inline transformation code. |
 | Generate fine-tuning code and start training | [references/finetuning/](references/finetuning/) | User says "start training", "fine-tune my model", "I'm ready to train", or plan reaches the finetuning step. Supports SFT, DPO, RLVR, RLAIF trainers. |
 | Evaluate or benchmark a trained model | [references/model-evaluation/](references/model-evaluation/) | User says "evaluate my model", "run a benchmark", "test model performance", "compare models". Supports LLM-as-Judge and Custom Scorer. |
-| Deploy a model to endpoint or Bedrock | [references/model-deployment/](references/model-deployment/) | User says "deploy my model", "create an endpoint", "make it available". Handles Nova vs OSS deployment pathways. |
+| Deploy, benchmark, or optimize a model on an endpoint or Bedrock | [references/model-deployment/](references/model-deployment/) | User says "deploy my model", "create an endpoint", or "make it available" (plain deploy) — or, for the inference-optimization sub-workflows on SageMaker Real-Time Endpoints only, "benchmark my endpoint" / "compare benchmark runs" (benchmarking), or states a performance/cost/latency/throughput goal for a new deployment such as "find the cheapest instance" (recommendations). Handles Nova vs OSS deployment pathways. |
 | Set up IAM roles, S3 buckets, SDK configuration | [references/sdk-getting-started/](references/sdk-getting-started/) | User says "set up", "getting started", "check my environment", "configure SDK", or as first step in any plan involving SageMaker training/evaluation/deployment. |
 | Manage project directory and artifacts | [references/directory-management/](references/directory-management/) | Starting a new project, resuming existing one, or when PLAN.md needs to be associated with a project directory. |
 | Set up, update, or delete a SageMaker Managed MLflow app | [references/manage-mlflow/](references/manage-mlflow/) | User says "set up MLflow", "create MLflow app", "update my MLflow app", "delete my MLflow app", "I need an MLflow server", asks "what is SageMaker MLflow", or a workflow needs an MLflow backend and none is connected. |

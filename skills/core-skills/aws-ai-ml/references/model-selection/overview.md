@@ -84,6 +84,11 @@ Present all available models to the user with their licenses before making any r
 
 **Display every model — completeness is required:**
 
+- `get_model_names.py` returns the models in a fixed, deterministic order:
+  **alphabetical by name (A→Z, case-insensitive)**. Present them in exactly that
+  order — do **not** re-sort or reorder the list. (This applies only to this raw
+  availability list; the benchmark ranking tables in `references/model-selection.md`
+  keep their performance order and must not be alphabetized.)
 - List **each** model returned by `get_model_names.py` as its own separate line with its own license URL. The number of models you display MUST equal the number the script returned.
 - Do **not** omit, drop, or skip any model — even when the list is long.
 - Do **not** separate models into Text vs VLM categories. Do **not** exclude VLMs from text-only use cases. Present **all** models in a single unified list regardless of modality.
@@ -96,17 +101,68 @@ Present all available models to the user with their licenses before making any r
 If you already know the model the user wants to use (from conversation context or planning files), confirm that it's in the list, display its license, and move on. Otherwise, help the user pick a model following the instructions in `references/model-selection.md`.
 **Important:** Make sure to remember this list of available models when helping with model selection. Don't recommend a model that's not available to the user.
 
+**EULA disclaimer (REQUIRED — you MUST include this whenever you present this model list):**
+
+After presenting the model list, always append this disclaimer:
+
+> "ℹ️ **Note:** Some models in this list require accepting an End-User License Agreement (EULA) before deployment. This is a SageMaker JumpStart requirement that is independent of the model's open-source license. Once you choose a model, I'll tell you whether it requires EULA acceptance."
+
 ### Step 4: Confirm Selection
+
+#### 4a. Check EULA gating status
+
+After the user selects a model — on **both** the base model deployment path and the fine-tuning
+path — check whether that model requires a JumpStart hub EULA acknowledgment. If the
+`HubContentDocument` was already retrieved earlier in this session, reuse that response instead of
+calling the API again. Otherwise, call `describe-hub-content` and check the `GatedBucket` field in
+the `HubContentDocument` JSON:
+
+```
+aws sagemaker describe-hub-content \
+    --region <region> \
+    --hub-name <hub-name> \
+    --hub-content-type Model \
+    --hub-content-name <selected-model-id>
+```
+
+Where:
+
+- `<region>` — the REGION resolved in Step 1
+- `<hub-name>` — the hub name selected in Step 2
+- `<selected-model-id>` — the HubContentName of the model the user just chose
+
+From the response, parse the `HubContentDocument` JSON string and read `GatedBucket`:
+
+- If `GatedBucket` is `true`: the model is **gated** — tell the user this model requires accepting
+  an EULA at deployment time.
+- If `GatedBucket` is `false` or absent: the model is **not gated** — tell the user this model does
+  not require accepting an EULA.
+
+If the `describe-hub-content` call fails (permissions, model not found, region mismatch), do not
+block selection — tell the user the gating status could not be determined and recommend they verify
+the model's license terms independently.
+
+> **Important:** The JumpStart hub EULA gate is independent of the upstream model license. A model
+> can be Apache 2.0 licensed and still be gated (requiring EULA acceptance), or vice versa. The
+> upstream license governs legal usage rights; the hub gate is a separate acknowledgment for models
+> whose artifacts are stored in a gated S3 bucket.
+
+#### 4b. Present confirmation summary
 
 Present a summary to the user:
 
 ```
 Here's what we've selected:
-- Base model: [model name]
+- Base model: <model name>
+- EULA required at deploy: Yes / No
 
 ```
 
-For the **base model deployment path**, also surface and carry forward the three fields resolved in
+If the model is gated, add:
+
+> "⚠️ This model requires accepting an End-User License Agreement (EULA) at deployment time."
+
+For the **base model deployment path**, also carry forward the three fields resolved in
 `select-for-deployment.md` Step 6:
 
 ```

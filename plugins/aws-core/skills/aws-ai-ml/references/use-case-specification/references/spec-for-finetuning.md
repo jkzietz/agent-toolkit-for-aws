@@ -22,29 +22,29 @@ Review what is already known from the conversation so far, then identify what is
 1. Save all generated artifacts under the project directory structure defined by the directory-management reference, if available.
 2. Synthesize the information into a Markdown document called `[relevant_title]_use_case_spec.md`:
 
-   ```markdown
-   # Use Case Specification
-   
-   ## Intent
-   
-   Fine-tune
-   
-   ## Business Problem
-   
-   [Concise problem statement + what the custom model will do]
-   
-   ## Primary Users
-   
-   [Who uses the model and in what context]
-   
-   ## Success Tenets
-   
-   1. **[Tenet Name]** — [Description of what success looks like, measurable by LLM-as-a-Judge]
-   2. **[Tenet Name]** — [Description]
-   3. **[Tenet Name]** — [Description]
-   
-   ```
+```markdown
+# Use Case Specification
 
+## Intent
+
+Fine-tune
+
+## Business Problem
+
+[Concise problem statement + what the custom model will do]
+
+## Primary Users
+
+[Who uses the model and in what context]
+
+## Success Tenets
+
+1. **[Tenet Name]** — [Description of what success looks like, measurable by LLM-as-a-Judge]
+2. **[Tenet Name]** — [Description]
+3. **[Tenet Name]** — [Description]
+```
+
+<!-- markdownlint-disable-next-line MD029 -->
 3. Present the spec to the user:
 
 > I have put together a use case specification and saved it in [filename].

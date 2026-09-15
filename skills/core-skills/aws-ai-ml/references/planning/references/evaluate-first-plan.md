@@ -12,11 +12,15 @@
 
 If the user decides to fine-tune after the decision gate, extend the plan:
 
-1. **Select Finetuning Technique** — Choose the appropriate finetuning technique. _(Skill: finetuning-technique)_
-2. **Evaluate Training Dataset** — Validate training data format. _(Skill: dataset-evaluation)_
-3. **Transform Training Dataset** — Convert to training format. _(Skill: dataset-transformation)_
-4. **Fine-Tune Model** — Train the model. _(Skill: finetuning)_
-5. **Evaluate Finetuned Model** — Compare against base model results. _(Skill: model-evaluation)_
-6. **Deploy Model** — Create an endpoint. _(Skill: model-deployment)_
+<!-- markdownlint-disable MD029 -->
+
+8. **Select Finetuning Technique** — Choose the appropriate finetuning technique. _(Skill: finetuning-technique)_
+9. **Evaluate Training Dataset** — Validate training data format. _(Skill: dataset-evaluation)_
+10. **Transform Training Dataset** — Convert to training format. _(Skill: dataset-transformation)_
+11. **Fine-Tune Model** — Train the model. _(Skill: finetuning)_
+12. **Evaluate Finetuned Model** — Compare against base model results. _(Skill: model-evaluation)_
+13. **Deploy Model** — Create an endpoint. _(Skill: model-deployment)_
+
+<!-- markdownlint-enable MD029 -->
 
 At the decision gate, present data objectively against the user's success criteria. Do not recommend — let the user decide.

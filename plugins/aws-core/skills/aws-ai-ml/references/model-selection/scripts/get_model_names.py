@@ -41,4 +41,10 @@ customization_models = [
 
 model_names = [m.get("HubContentName") for m in customization_models]
 
+# Sort alphabetically (case-insensitive) so the same hub always yields the same
+# ordered list. The SageMaker ListHubContents API returns models in
+# pagination order, which is not stable across calls, so without this sort the
+# agent would present a different order each run.
+model_names.sort(key=lambda n: (n or "").lower())
+
 print(json.dumps(model_names))

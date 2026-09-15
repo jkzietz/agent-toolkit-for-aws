@@ -6,7 +6,7 @@ Discovers existing MLflow apps in the user's account and helps them select one.
 
 ## Steps
 
-1. Use `aws-mcp` to call `sagemaker:ListMlflowApps` in the current region.
+1. Run `aws sagemaker list-mlflow-apps` in the current region.
 
 2. **Filter results:**
    - Show apps with status `ACTIVE` or `CREATING`
@@ -24,6 +24,6 @@ Discovers existing MLflow apps in the user's account and helps them select one.
 
 ## Edge Cases
 
-- **App in CREATING status:** Inform user it's still provisioning. Offer to wait (poll with `aws-mcp` `sagemaker:DescribeMlflowApp` until ACTIVE) or pick another app.
+- **App in CREATING status:** Inform user it's still provisioning. Offer to wait (poll with `aws sagemaker describe-mlflow-app` until ACTIVE) or pick another app.
 - **All apps are FAILED:** Suggest creating a new one rather than troubleshooting failed apps.
 - **Wrong region:** If user expected to find an app, ask if they want to check a different region before offering to create.

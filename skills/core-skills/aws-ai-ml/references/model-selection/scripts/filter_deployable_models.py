@@ -157,6 +157,57 @@ def matches(model, constraints):
     return True
 
 
+def sort_models_newest_first(models):
+    """Return models sorted deterministically, newest first.
+
+    The ordering is total and stable, so identical input always produces
+    identical output:
+
+      1. Models WITH an ``original_creation_time`` come before models that lack
+         one. Undated models are pushed to the end.
+      2. Among dated models, sort by ``original_creation_time`` DESCENDING
+         (most recent first). Creation times are ISO 8601 strings, which
+         compare correctly lexicographically.
+      3. ``name`` ASCENDING (case-insensitive) is the tie-breaker applied
+         throughout. It orders dated models that share a creation time AND
+         alphabetizes the undated group among themselves at the end. So if
+         four models are undated, all four sit at the end of the list sorted
+         A -> Z relative to each other.
+
+    Implementation note: we split into dated/undated groups and use Python's
+    stable sort with two passes (name ascending, then time descending), rather
+    than a single composite key. This avoids comparing ``None`` to strings and
+    avoids any per-character math on the timestamp: ISO 8601 strings of
+    DIFFERENT lengths (e.g. with vs. without fractional seconds, since
+    ``datetime.isoformat()`` omits microseconds when they are zero) compare
+    correctly as-is under ``reverse=True``, whereas a per-character inversion
+    would let a shorter string become a prefix of a longer one and sort wrong.
+
+    Args:
+        models: List of model dicts.
+
+    Returns:
+        A new sorted list (the input list is not mutated).
+    """
+
+    def name_key(model):
+        return (model.get("name") or "").lower()
+
+    dated = [m for m in models if m.get("original_creation_time") is not None]
+    undated = [m for m in models if m.get("original_creation_time") is None]
+
+    # Stable two-pass sort for the dated group: establish the name (A->Z)
+    # tie-break first, then sort by time descending. Because the sort is
+    # stable, models sharing a creation time keep the name ordering.
+    dated.sort(key=name_key)
+    dated.sort(key=lambda m: m["original_creation_time"], reverse=True)
+
+    # Undated group: alphabetical by name.
+    undated.sort(key=name_key)
+
+    return dated + undated
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python filter_deployable_models.py <models_json_file> [constraint:value ...]")
@@ -194,6 +245,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     filtered = [m for m in models if matches(m, constraints)]
+    filtered = sort_models_newest_first(filtered)
 
     # Output summary + results
     result = {

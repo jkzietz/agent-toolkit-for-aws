@@ -22,13 +22,13 @@ Before searching, ask the user:
 
 **IAM Role discovery:**
 
-- Use `aws-mcp` to call `iam:ListRoles` and look for roles with `sagemaker.amazonaws.com` in the trust policy
+- Run `aws iam list-roles` and look for roles with `sagemaker.amazonaws.com` in the trust policy
 - If a role from `sdk-getting-started` skill is already in conversation context, suggest reusing it
 - If multiple candidates found, present them and ask user to choose
 
 **S3 Bucket discovery:**
 
-- Use `aws-mcp` to call `s3:ListBuckets`
+- Run `aws s3api list-buckets`
 - If a bucket contains "sagemaker" or "mlflow" in the name, suggest it
 - Check bucket is in the same region as where the MLflow app will be created
 
@@ -49,17 +49,17 @@ Before searching, ask the user:
 
 Before calling, confirm with user: "I'll create an MLflow app named '{name}' in {region} using role {role_arn} and bucket {bucket}. Proceed?"
 
-Use `aws-mcp` to call `sagemaker:CreateMlflowApp` with:
+Run `aws sagemaker create-mlflow-app` with:
 
 - `Name`: user-provided, or auto-suggest as `mlflow-app-{YYYYMMDD-HHMMSS}`
 - `ArtifactStoreUri`: `s3://{bucket_name}/mlflow-artifacts`
 - `RoleArn`: the role from Step 1
 
-For optional parameters (ModelRegistrationMode, AccountDefaultStatus, etc.), use `aws-mcp` to discover what the API accepts at runtime rather than hardcoding values.
+For optional parameters (ModelRegistrationMode, AccountDefaultStatus, etc.), discover what the API accepts at runtime rather than hardcoding values.
 
 ## Step 3: Poll until ACTIVE
 
-Use `aws-mcp` to call `sagemaker:DescribeMlflowApp` in a loop (every 15 seconds):
+Run `aws sagemaker describe-mlflow-app` in a loop (every 15 seconds):
 
 - Expected progression: `CREATING` → `ACTIVE`
 - Timeout: 10 minutes

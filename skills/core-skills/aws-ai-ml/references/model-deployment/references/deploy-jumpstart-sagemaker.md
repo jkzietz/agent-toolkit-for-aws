@@ -3,12 +3,9 @@
 ## Scenario
 
 - **Model Type**: open-weight foundation model resolved through **SageMaker JumpStart** (a base
-
   model, identified by a JumpStart model id — NOT a fine-tuned training job)
-
 - **Deployment Target**: SageMaker real-time endpoint
 - **Approach**: SageMaker Python SDK v3 `ModelBuilder.from_jumpstart_config(...)`, deployed from the
-
   **deployment config emitted by the model-selection skill**
 
 ## Overview
@@ -64,13 +61,9 @@ in the SDK or silently misbehaving. It checks:
 - `instance_count` is a positive integer (`bool` rejected — it is a subclass of `int`)
 - `model_version` is a string or `None`
 - `inference_config_name` is a non-empty name or `None` (an empty string would be treated as a
-
   real config name and fail deep in the SDK)
-
 - `accept_eula` is a **real bool** — a non-bool such as the string `"false"` is truthy in Python
-
   and could silently auto-accept a gated model's license, so it is rejected (a safety check)
-
 - `env_vars` is `None` or a flat dict of string → string
 
 Keep this validator in the generated notebook. It is the runtime guard; the agent-time check in
@@ -92,23 +85,16 @@ this API the way v2→v3 did). Do not use the v2 `JumpStartModel` / `sagemaker.e
 ## Key Gotchas
 
 - **Do not re-resolve the config.** model-selection already picked `instance_type` and
-
   `inference_config_name`. Do not call `get_config_names` / `list_deployment_configs` or read the
   `HubContentDocument` here — pass the dict through. The SDK resolves container/env/sizing from the
   config name.
-
 - **`inference_config_name` must be valid or `None`.** A name the model doesn't expose fails inside
-
   `from_jumpstart_config`. model-selection validates the name against `get_config_names` before
   emitting it, so treat a non-`None` value as trusted.
-
 - **Instance ↔ config consistency.** If both `instance_type` and `inference_config_name` are set,
-
   the instance must be in that config's `supported_inference_instance_types` (server-side ranking
   rejects otherwise). model-selection guarantees this; surface the SDK error cleanly if it occurs.
-
 - **Gated models**: `accept_eula` defaults to `False`, which is safe for non-gated models. It is set
-
   to `True` only after the user explicitly accepted the license in Step 4. Whether a model is gated
   is given by the **Gated (EULA)** column in `model-licenses.md` (a `Yes` row is gated — e.g.
   Meta/Llama, Gemma, NVIDIA Nemotron, Llama 4, Qwen License Agreement); it is a property of the
@@ -188,9 +174,7 @@ Each cell's content comes from `../code_templates/deploy-jumpstart-sagemaker.py`
 
 - **Cell 1**: Setup (pip install)
 - **Cell 2**: Configuration and validation (the config dict from model-selection + deployment-owned
-
   fields, plus `validate_deployment_config` which runs before the build)
-
 - **Cell 3**: Build the model via `from_jumpstart_config`
 - **Cell 4**: Deploy and wait for InService
 - **Cell 5**: Test Inference
@@ -229,7 +213,6 @@ based on whether the model is gated (**Gated (EULA)** column in `model-licenses.
 
 - **Not gated** (`No`): leave `accept_eula=False`. This is the default and needs no change.
 - **Gated** (`Yes`): set `accept_eula=True` only once the user accepted the license at the Step 4
-
   gate. If they did not accept, leave it `False` and tell them deployment cannot continue without
   license acceptance.
 
@@ -250,33 +233,23 @@ To run:
 4. Cell 4 — deploy (waits for the endpoint to be InService, ~10-15 min)
 5. Cell 5 — test inference with a sample prompt
 6. Cell 6 — save the deployment manifest to `manifests/deploy-<endpoint-name>.json`
-
 ```
 
 ## Common Issues
 
 - **`ValueError` from `validate_deployment_config`**: the config dict from model-selection is
-
   missing a field or has a wrong type (e.g. `accept_eula` as a string, an empty
   `inference_config_name`, a non-positive `instance_count`). The message names the offending field
   — fix it in model-selection's output rather than editing the value by hand in the notebook.
-
 - **"No module named 'sagemaker.jumpstart'"** or **`JumpStartModel` not found**: v2 imports on the
-
   v3 SDK — deploy via `ModelBuilder.from_jumpstart_config(...)`, not `JumpStartModel`.
-
 - **`inference_config_name` rejected in `from_jumpstart_config`**: the name isn't one of the
-
   model's configs. It should have come from model-selection's `get_config_names` — re-check the
   config dict or set it to `None` to use the SDK's top-ranked default.
-
 - **Instance-type rejected for the chosen config**: `instance_type` is not in the config's
-
   `supported_inference_instance_types`. model-selection should have validated this — go back and
   re-resolve the pair.
-
 - **Capacity error on a scarce GPU instance**: the config's recommended instance family may be
-
   capacity-constrained — reach out to AWS Support / your account team (a Service Quotas increase
   does not guarantee capacity), or have model-selection pick a different config.
 
@@ -287,9 +260,6 @@ After the notebook runs successfully, tell the user:
 - **Endpoint**: `[ENDPOINT_NAME]` is now InService, running `[MODEL_ID]` on `[INSTANCE_TYPE]`.
 - **How to invoke**: use the SageMaker runtime `InvokeEndpoint`.
 - **Billing**: this endpoint is billed by the hour while running, even when idle. Delete it when
-
   you're done testing.
-
 - **Cleanup**: delete the endpoint (and its endpoint config / model) using the AWS MCP tool
-
   (`delete-endpoint`, then `delete-endpoint-config`, then `delete-model`).

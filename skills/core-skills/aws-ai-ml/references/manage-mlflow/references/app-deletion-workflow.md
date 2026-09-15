@@ -11,7 +11,7 @@ Guides safe deletion of a SageMaker Managed MLflow app with appropriate warnings
 
 ## Step 2: Pre-deletion Checks
 
-Use `aws-mcp` to call `sagemaker:DescribeMlflowApp` to get the app's current status.
+Run `aws sagemaker describe-mlflow-app` to get the app's current status.
 
 - **Status is ACTIVE:** proceed to Step 3
 - **Status is CREATING:** inform user — "This app is still being created. Wait until it's active before deleting."
@@ -42,7 +42,7 @@ Ask for explicit confirmation: "Type 'yes' to confirm deletion."
 
 ## Step 4: Execute Deletion
 
-Use `aws-mcp` to call `sagemaker:DeleteMlflowApp` with the app ARN.
+Run `aws sagemaker delete-mlflow-app` with the app ARN.
 
 ## Step 5: Post-deletion Guidance
 

@@ -4,9 +4,9 @@ Manages the full lifecycle of SageMaker Managed MLflow apps: discover existing a
 
 ## Principles
 
-1. **Don't ask what you can look up.** Resolve region, account ID, and existing apps via `aws-mcp` before asking the user.
+1. **Don't ask what you can look up.** Resolve region, account ID, and existing apps via AWS CLI or SDK before asking the user.
 2. **Don't create what the user can provide.** For IAM roles and S3 buckets, list existing ones or ask the user to provide — do not create them. Link to [IAM prerequisites documentation](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow-app-setup-prerequisites-iam.html) if the user needs to set them up.
-3. **Don't hardcode API shapes.** Use `aws-mcp` to discover current API parameters and valid values at runtime. Do not rely on static enums or field lists that may become stale.
+3. **Don't hardcode API shapes.** Discover current API parameters and valid values at runtime (e.g., `aws sagemaker create-mlflow-app help`). Do not rely on static enums or field lists that may become stale.
 4. **Warn before destruction.** Deleting destroys metadata. Always confirm before proceeding.
 5. **Use MLflow App APIs only.** Use `CreateMlflowApp`, `ListMlflowApps`, `DescribeMlflowApp`, `UpdateMlflowApp`, `DeleteMlflowApp`. Do NOT use the legacy Tracking Server APIs (`CreateMlflowTrackingServer`, `ListMlflowTrackingServers`, etc.) — those are deprecated for new deployments.
 
@@ -26,7 +26,7 @@ If the user wants to take action (create, connect, update, delete, set up), cont
 
 Read and follow `references/app-discovery-workflow.md`.
 
-Use `aws-mcp` to call `sagemaker:ListMlflowApps` and present results to user.
+Run `aws sagemaker list-mlflow-apps` and present results to user.
 
 **MANDATORY — OSS MLflow Skills Check.** You MUST run this check during discovery. Do NOT skip it:
 
@@ -49,7 +49,7 @@ After user confirms, run the install command and re-run the check. Remember the 
 
 Based on discovery results and user input, determine the action:
 
-- **User wants to connect to an existing app** → Re-run the OSS MLflow skills check from Phase 1. Hand off the selected ARN to `sagemaker-mlflow` skill (if available) for environment setup. Additionally, if the user is using a SageMaker Training Job (SDK or any variant), also guide them to pass the MLflow app ARN into the training job configuration as an environment variable. Do not hardcode the exact API shape — use `aws-mcp` to discover how to pass environment variables to the training job at runtime.
+- **User wants to connect to an existing app** → Re-run the OSS MLflow skills check from Phase 1. Hand off the selected ARN to `sagemaker-mlflow` skill (if available) for environment setup. Additionally, if the user is using a SageMaker Training Job (SDK or any variant), also guide them to pass the MLflow app ARN into the training job configuration as an environment variable. Do not hardcode the exact API shape — run `aws sagemaker create-training-job help` to discover how to pass environment variables to the training job at runtime.
 - **User wants to create a new app** → Proceed to Phase 3a.
 - **User wants to update an existing app** → Proceed to Phase 3b.
 - **User wants to delete an existing app** → Proceed to Phase 3c.

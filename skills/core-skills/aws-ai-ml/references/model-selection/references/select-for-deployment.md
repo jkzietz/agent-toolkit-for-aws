@@ -15,7 +15,7 @@ This returns a JSON object showing all unique values available for each filterab
 ```json
 {
   "tasks": ["text generation", "image classification", "translation", ...],
-  "sizes": ["1b", "1b-10b", "10b-70b", "70b-100b", ">100b", ...],
+  "sizes": ["<=10b", "11b-70b", "71b-100b", ">100b", "unknown"],
   "data_types": ["text", "vision", "audio", "multimodal", "tabular"],
   ...
 }
@@ -26,31 +26,112 @@ This returns a JSON object showing all unique values available for each filterab
 
 Read `use_case_spec.md` and extract the **Deployment Constraints** section. These are natural language preferences from the user.
 
-For each constraint in the spec, compare the user's words against the available values from Step 1 and select the best matching filter value(s):
+> **ENFORCEMENT — read before mapping.** Apply these rules in order:
+>
+> 1. **Use ONLY the tables below.** Do not infer filter values from your own
+>    knowledge of model sizes, tasks, or context lengths, and do not substitute
+>    "close enough" values. The tables are the single source of truth, so the SAME
+>    user words always produce the SAME filter set every run.
+> 2. **Unmapped term → ASK.** If a constraint term is not listed below, ask the
+>    user a clarifying question rather than guessing.
+> 3. **Ambiguous term → offer options.** If a term is ambiguous (e.g. "qa" =
+>    *question answering* or *quality assurance*), ask and offer the mapped
+>    categories to choose from (e.g. "task options: chatbot/assistant,
+>    summarization, classification, translation — which fits?").
+> 4. **"any" / "don't care" → no filter** for that field.
+> 5. **Pass each value in a cell as its own argument** with the same key; the
+>    filter OR-s values within a key.
 
-| Spec Field | Filter Key | Mapping Approach |
+### 2a. Size — soft term → exact `size` value
+
+`get_deployable_models.py` normalizes every model into one of five canonical size
+buckets (`<=10b` / `11b-70b` / `71b-100b` / `>100b` / `unknown`). The four below
+are the selectable values; `unknown` means the model's size could not be
+determined — it is excluded by any size filter and has no soft-term mapping.
+
+| If the user says… | Use exactly |
+|---|---|
+| small, tiny, lightweight, cheap, low-cost, smallest | `size:<=10b` |
+| medium, mid-size, moderate | `size:11b-70b` |
+| large | `size:71b-100b` |
+| very large, huge, biggest, largest | `size:>100b` |
+
+### 2b. Task — soft term → exact `task` value(s)
+
+Task tags in the hub overlap and are matched by substring, so use these exact
+OR-lists (do not shorten them — e.g. bare `task:classification` wrongly matches
+image/tabular/token classification).
+
+| If the user wants… | Use exactly |
+|---|---|
+| chatbot, chat, assistant, conversational, customer support | `task:text generation` `task:generation-text` |
+| summarize, summarization, summaries | `task:text generation` `task:generation-text` |
+| classify, classification, categorize | `task:text classification` `task:classification-text` |
+| translate, translation | `task:translation` |
+| code, coding, programming | `task:text generation` `task:generation-text` — then tell the user that code-focused models are not separately tagged; to find them, look for the `codellama`, `qwen-coder`, `starcoder`, or `granite-code` families by name |
+
+> Note on summarization: the hub's dedicated `text summarization` /
+> `summarization-text` tags are almost entirely older short-context (≤4k)
+> seq2seq models (BART/Pegasus/DistilBART) that mostly lack a `context_window`
+> value — so filtering on them (especially combined with a long-context
+> constraint) returns few or zero usable models. Capable long-document
+> summarizers are general instruction-tuned LLMs tagged `text generation` /
+> `generation-text`, which is why "summarize" maps there.
+
+### 2c. Context window — soft term → exact `context_window` value(s)
+
+| If the user says… | Use exactly |
+|---|---|
+| short, small context | `context_window:<4k` `context_window:4k-8k` |
+| medium context | `context_window:8k-32k` |
+| long, long documents, long context | `context_window:32k-128k` `context_window:>128k` |
+| very long, largest context | `context_window:>128k` |
+
+> Unlike `size`, `context_window` is NOT normalized by the script — it is stored
+> and matched verbatim, and the table above assumes the hub's buckets are exactly
+> `<4k` / `4k-8k` / `8k-32k` / `32k-128k` / `>128k`. Before applying a
+> context_window filter, confirm the value(s) appear in the `context_windows` list
+> from the Step 1 `--list-values` output. If the hub's buckets differ (e.g. a new
+> value like `16k`), use the matching value(s) from that list instead of a value
+> from this table — do NOT filter on a bucket that isn't in the catalog, or the
+> result will be silently empty.
+
+### 2d. Other fields — exact mappings
+
+| Field | If the user says… | Use exactly |
 |---|---|---|
-| Task | `task` | Match user's description to closest value(s) in `tasks` list. E.g., "chatbot" → "text generation" |
-| Data type | `data_type` | Match to closest value in `data_types` list |
-| Size preference | `size` | Map descriptive language to size bucket(s). E.g., "small" → "1b" and "1b-10b"; "large" → "10b-70b" and "70b-100b" |
-| Deployment target | `bedrock` | If "Bedrock" → `bedrock:true`. If "SageMaker" or "either" → no filter needed |
-| License | `license` | Match to closest value in `licenses` list. Use substring matching. |
-| Context window | `context_window` | Map to closest bucket. E.g., "long documents" → "32k-128k" or ">128k" |
-| Languages | `language` | Match to value in `languages` list |
-| Model type | `model_type` | "open source" / "open weights" → "open_weights"; "proprietary" → "proprietary" |
-| Recency | *(not a filter)* | If user wants "latest" or "newest", sort filtered results by `original_creation_time` descending and present the most recent models first |
+| Data type | text | `data_type:text` |
+| | image, vision | `data_type:vision` |
+| | audio, speech | `data_type:audio` |
+| | multimodal | `data_type:multimodal` |
+| | tabular | `data_type:tabular` |
+| Model type | open source, open weights | `model_type:open_weights` |
+| | proprietary, closed | `model_type:proprietary` |
+| Deployment target | Bedrock | `bedrock:true` |
+| | SageMaker, either, unspecified | *(no filter)* |
 
-**Rules:**
+### 2e. Concrete fields — user names the value directly
 
-- If a user's preference maps to multiple valid values (e.g., "small" could be "1b" or "1b-10b"), pass all of them as separate arguments with the same key (e.g., `"size:1b" "size:1b-10b"`). The filter OR-s values within the same key.
-- If a preference doesn't clearly map to any available value, skip it (don't filter on it).
-- If the user said "any" or "don't care", do not create a filter for that field.
+For **license, language, provider, model name**, and **modalities**, do not use a
+lookup table — the user names a concrete value. Match it against the Step 1
+`--list-values` output using substring matching (e.g. "apache" matches both
+`apache 2.0` and `apache-2.0`). If the named value is absent from the catalog,
+tell the user rather than substituting a different one.
 
-Present your mapping to the user for confirmation before filtering:
+**General rules:**
+
+- If the user said "any" or "don't care" for a field, do not create a filter for it.
+- If a term is not covered by the tables above, is ambiguous (like "qa"), or is not
+  a concrete value the user named, ASK a clarifying question — and list the relevant
+  mapped options so the user can choose (for tasks: chatbot/assistant, summarization,
+  classification, translation; for size: small, medium, large,
+  very large). Do not guess.
+
+Present your resolved mapping to the user for confirmation before filtering:
 
 > "Based on your preferences, I'll filter with these criteria: [list each mapping]. Does this look right?"
 
-⏸ Wait for user confirmation. If they disagree, adjust.
+⏸ Wait for user confirmation. If they disagree, adjust — but only to other values that exist in the tables above or the Step 1 catalog values.
 
 ## Step 3: List Models and Apply Filters
 
@@ -71,14 +152,23 @@ After filtering, report:
 
 ### If results are non-empty (≤20 models)
 
-Present all matching models. Cross-reference with `references/model-licenses.md` for license links where available. Display each model on its own line:
+The filter script returns models in a fixed, deterministic order: **newest
+first** (by original creation date, descending), with model name (A→Z) breaking
+ties and any models lacking a creation date placed last (also A→Z). **Present
+the models in exactly the order the script returned them — do NOT re-sort,
+re-group, or reorder by size, name, license, or relevance.** This guarantees the
+same constraints always produce the same ordered list.
+
+Present all matching models. Cross-reference with `references/model-licenses.md` for license links where available. Display each model on its own line, preserving script order:
 
 ```
-<model name> — <size> | <license> | Bedrock: ✓/✗
+<model name> — <size_raw> | <license> | Bedrock: ✓/✗
 
 ```
 
-Omit fields that are unknown rather than showing blanks. **Display every matching model — completeness is required.**
+For the size column use the model's `size_raw` field (the actual parameter count,
+e.g. `7b`) when present — it is more informative than the normalized `size`
+bucket. Fall back to `size` only if `size_raw` is absent. Omit fields that are unknown rather than showing blanks. **Display every matching model — completeness is required.**
 
 Ask the user to select:
 
@@ -88,7 +178,7 @@ Ask the user to select:
 
 ### If results are non-empty but large (>20 models)
 
-Show the first 20, state how many total matched, and ask:
+Show the first 20 (the 20 newest, since the script returns newest-first — preserve script order), state how many total matched, and ask:
 
 > "There are [matched] models matching your constraints. Here are the first 20. Would you like to see more, or would you like to tighten your constraints to narrow further?"
 

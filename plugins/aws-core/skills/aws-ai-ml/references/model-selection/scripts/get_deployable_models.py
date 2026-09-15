@@ -24,6 +24,87 @@ import botocore.exceptions
 os.environ.setdefault("AWS_SDK_UA_APP_ID", "AWSSkill-SageMaker")
 
 
+# Canonical, non-overlapping size buckets. The hub's raw @model-size values are
+# inconsistent — a mix of ranges (e.g. "1b-10b", "10b-70b") and exact parameter
+# counts (e.g. "2b", "7b", "30b", "550b"), plus "<1b" and "unknown". Because the
+# size filter is an EXACT match, that inconsistency makes deterministic
+# soft->hard mapping impossible (e.g. "small" -> "1b-10b" would silently miss a
+# model tagged "7b"). We normalize every raw value into one of these buckets so
+# the filter and the soft-constraint mapping only ever deal with a clean set.
+SIZE_BUCKETS = ("<=10b", "11b-70b", "71b-100b", ">100b", "unknown")
+
+
+def normalize_size_bucket(raw):
+    """Map a raw @model-size value to a canonical, non-overlapping bucket.
+
+    Assignment rule by parameter count N (in billions):
+        N <= 10   -> "<=10b"
+        10 < N <= 70  -> "11b-70b"
+        70 < N <= 100 -> "71b-100b"
+        N > 100   -> ">100b"
+        unparseable / missing -> "unknown"
+
+    Handles both exact values ("7b", "30b", "550b") and the hub's own range
+    labels ("1b-10b", "10b-70b", "70b-100b", ">100b", "<1b"). Range labels are
+    classified by their UPPER bound (the largest models the range can contain),
+    except ">100b" which is unbounded above and maps to ">100b". This keeps the
+    mapping total and deterministic.
+
+    Args:
+        raw: The raw size string from the @model-size keyword, or None.
+
+    Returns:
+        One of SIZE_BUCKETS.
+    """
+    if not raw:
+        return "unknown"
+
+    value = raw.strip().lower()
+    if value == "unknown":
+        return "unknown"
+
+    def bucket_for(n):
+        if n <= 10:
+            return "<=10b"
+        if n <= 70:
+            return "11b-70b"
+        if n <= 100:
+            return "71b-100b"
+        return ">100b"
+
+    # ">100b" (or any ">Nb") is unbounded above -> largest bucket.
+    if value.startswith(">"):
+        return ">100b"
+
+    # "<1b" (or any "<Nb") -> use the upper bound N (e.g. <1b has upper bound 1).
+    if value.startswith("<"):
+        num = _parse_billions(value[1:])
+        return bucket_for(num) if num is not None else "unknown"
+
+    # Range label like "1b-10b" / "10b-70b" / "70b-100b": classify by upper bound.
+    if "-" in value:
+        upper = _parse_billions(value.split("-", 1)[1])
+        return bucket_for(upper) if upper is not None else "unknown"
+
+    # Exact value like "7b", "30b", "550b".
+    num = _parse_billions(value)
+    return bucket_for(num) if num is not None else "unknown"
+
+
+def _parse_billions(token):
+    """Parse a size token like '7b', '550b', '10' into a number of billions.
+
+    Returns a float, or None if it cannot be parsed.
+    """
+    if not token:
+        return None
+    t = token.strip().lower().rstrip("b").strip()
+    try:
+        return float(t)
+    except ValueError:
+        return None
+
+
 def get_deployable_models(hub_name, region_name=None):
     """Query a SageMaker Hub and return structured model metadata.
 
@@ -74,7 +155,12 @@ def get_deployable_models(hub_name, region_name=None):
             elif kw.startswith("@output-modality:"):
                 entry.setdefault("output_modalities", []).append(kw.split(":", 1)[1])
             elif kw.startswith("@model-size:"):
-                entry["size"] = kw.split(":", 1)[1]
+                # Preserve the raw hub value for display, and store the
+                # normalized canonical bucket under "size" (what the filter and
+                # the soft-constraint mapping use).
+                raw_size = kw.split(":", 1)[1]
+                entry["size_raw"] = raw_size
+                entry["size"] = normalize_size_bucket(raw_size)
             elif kw.startswith("@license:"):
                 entry["license"] = kw.split(":", 1)[1]
             elif kw.startswith("@language:"):

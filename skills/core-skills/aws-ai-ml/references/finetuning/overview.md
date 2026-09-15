@@ -19,7 +19,10 @@ Before starting this workflow, verify:
 4. The SDK environment has been verified (SDK version, region, execution role)
    - If not done: Load the `sdk-getting-started` reference first, then resume
 
-5. A training dataset uploaded to a bucket in the environment's default region.
+5. The region supports serverless model customization
+   - Check the environment's region against `../planning/references/region-availability.md`. If it is NOT supported, STOP and give the user the blocking message from that file — do not proceed with fine-tuning. (This is normally enforced by the planning skill, but is repeated here in case fine-tuning is reached without it.)
+
+6. A training dataset uploaded to a bucket in the environment's default region.
    - If not met: Help the user upload the dataset to the correct S3
 
 ---

@@ -24,6 +24,10 @@ Read `references/input-output-contracts.md`, `references/model-customization-pla
 
 **During brainstorming:**
 
+- **Serverless customization region gate (check FIRST).** If the user's request involves fine-tuning or model customization, AND their region is already known (stated in their message, or stored in conversation context from a prior sdk-getting-started run), check it against the supported regions in `references/region-availability.md`. If the region is NOT supported, STOP immediately. Do NOT ask about evaluate-first vs direct fine-tuning. Do NOT generate any fine-tuning plan. Instead, tell the user the blocking message from `references/region-availability.md` (substituting their region).
+
+  If the region is not yet known, continue to the workflow choice gate — the pre-execution region check below will enforce this constraint before any fine-tuning task runs.
+
 - **Workflow choice gate:** Before generating any plan, determine which workflow the user needs. There are three paths:
 
   1. **Deploy a base model** — the user wants to select and deploy a model from the catalog without fine-tuning.
@@ -111,10 +115,18 @@ Update `PLAN.md` whenever a task's status changes.
 
 Once the plan is approved:
 
-1. Before starting a task, update its status in `PLAN.md` to 🔄 (In Progress).
-2. If the task maps to a reference, load that reference's overview.md before doing any work. Do not attempt the task from general knowledge — always defer to the reference's instructions.
-3. Execute the task by following the loaded reference's workflow.
-4. When the task completes:
+1. **Pre-execution region check (MANDATORY for fine-tuning plans).** If the plan includes any fine-tuning step, immediately check the user's region by running:
+
+   ```
+   python -c "import boto3; print(boto3.session.Session().region_name)"
+   ```
+
+   If the result is `None`, skip this check and continue — the sdk-getting-started skill will prompt the user to set a region later. Otherwise, check the region against the supported regions in `references/region-availability.md`. If it is NOT supported → STOP. Do NOT start executing the plan. Tell the user the blocking message from `references/region-availability.md` (substituting their region). If it IS supported → briefly confirm to the user that serverless model customization is available in their region (e.g., "Your region (`<region>`) supports serverless model customization ✅") and continue.
+
+2. Before starting a task, update its status in `PLAN.md` to 🔄 (In Progress).
+3. If the task maps to a reference, load that reference's overview.md before doing any work. Do not attempt the task from general knowledge — always defer to the reference's instructions.
+4. Execute the task by following the loaded reference's workflow.
+5. When the task completes:
    - Update its status in `PLAN.md` to ✅ (Completed). If the task generated output files (scripts, notebooks, manifests), record the file paths under the completed task:
 
      ```
@@ -125,7 +137,7 @@ Once the plan is approved:
      ```
 
    - Briefly confirm completion and move to the next task.
-5. If the user interrupts with a new request mid-execution:
+6. If the user interrupts with a new request mid-execution:
    - Completed tasks are immutable — do NOT modify them.
    - Regenerate the remaining tasks to incorporate the user's new input.
    - Present the updated remainder for approval before continuing.
@@ -152,3 +164,4 @@ Load the reference plan that matches the customer's intent, then adjust based on
 - `references/deploy-base-model-plan.md` — The deploy-base-model workflow: select and deploy a base model without fine-tuning.
 - `references/input-output-contracts.md` - A table showing all references, required inputs, produced outputs, prerequisites, and constraints.
 - `references/skill-routing-constraints.md` — Optional supplemental resource about Mandatory inclusion rules, ordering constraints, and skill boundary rules.
+- `references/region-availability.md` — Single source of truth for the regions where serverless model customization is available, plus the blocking message to use when a region is unsupported.
