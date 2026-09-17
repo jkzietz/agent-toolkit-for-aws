@@ -48,7 +48,7 @@ Output should be production-ready, well-documented, and deployable in under 10 m
 
 **Required Access:**
 
-1. AWS Knowledge MCP Server integration enabled in AI assistant
+1. AWS MCP Server integration enabled in AI assistant
 2. AWS account access (read-only sufficient for assessment)
 3. Basic understanding of AWS services (EC2, RDS, S3, IAM)
 

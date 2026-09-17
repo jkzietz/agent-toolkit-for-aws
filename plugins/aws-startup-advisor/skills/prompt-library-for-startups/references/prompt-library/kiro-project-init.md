@@ -334,7 +334,7 @@ inclusion: always
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Infrastructure modified:\n1. Identify added/modified/removed resources\n2. Use AWS Pricing MCP: costs per resource, region pricing, data transfer, compare previous\n3. Report: monthly estimate, delta, optimizations, unexpected costs\n4. Append to infrastructure/cost-estimates.md\n5. Flag if increase > $[THRESHOLD, e.g., 500]\n\nMCP: AWS Pricing"
+    "prompt": "Infrastructure modified:\n1. Identify added/modified/removed resources\n2. Use AWS MCP Server: costs per resource, region pricing, data transfer, compare previous\n3. Report: monthly estimate, delta, optimizations, unexpected costs\n4. Append to infrastructure/cost-estimates.md\n5. Flag if increase > $[THRESHOLD, e.g., 500]\n\nMCP: AWS Pricing"
   }
 }
 ```
@@ -358,9 +358,9 @@ inclusion: always
       "disabled": false,
       "autoApprove": []
     },
-    "awslabs.aws-knowledge-mcp-server": {
-      "url": "https://knowledge-mcp.global.api.aws",
-      "type": "http",
+    "aws-mcp": {
+      "command": "uvx",
+      "args": ["mcp-proxy-for-aws-cli@latest", "https://aws-mcp.us-east-1.api.aws/mcp", "--skip-auth"],
       "disabled": false
     },
     "awslabs.cdk-mcp-server": {
@@ -407,13 +407,6 @@ inclusion: always
       "args": ["awslabs.cloudtrail-mcp-server@latest"],
       "env": { "AWS_PROFILE": "[profile]", "FASTMCP_LOG_LEVEL": "ERROR" },
       "disabled": false
-    },
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": ["awslabs.aws-pricing-mcp-server@latest"],
-      "env": { "AWS_PROFILE": "[profile]", "FASTMCP_LOG_LEVEL": "ERROR" },
-      "disabled": false,
-      "autoApprove": ["get_products"]
     },
     "awslabs.bedrock-kb-retrieval-mcp-server": {
       "command": "uvx",

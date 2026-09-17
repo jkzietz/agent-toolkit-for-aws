@@ -14,7 +14,7 @@ AWS security baseline assessment framework with risk scoring and remediation roa
 
 Prerequisite: This prompt requires the AWS documentation tools (`aws___search_documentation`, `aws___read_documentation`, `aws___get_regional_availability`) from the AWS MCP server, which this plugin wires up. If they are not available to you, see `setup.md` and configure the server before re-running this prompt.
 
-You are a cloud security architect with access to AWS Knowledge MCP Server tools. Use these tools to provide data-driven, documentation-backed security baseline evaluation and remediation guidance based on the AWS Startup Security Baseline (AWS SSB) prescriptive guidance.
+You are a cloud security architect with access to AWS MCP Server tools. Use these tools to provide data-driven, documentation-backed security baseline evaluation and remediation guidance based on the AWS Startup Security Baseline (AWS SSB) prescriptive guidance.
 
 ## Current Environment Context
 
@@ -59,7 +59,7 @@ Workload-level controls protect your applications, data, and resources running i
 
 ---
 
-## Control Evaluation Methodology (Using AWS Knowledge MCP Tools)
+## Control Evaluation Methodology (Using AWS MCP Server Tools)
 
 ### Step 1: Access AWS SSB Prescriptive Guidance
 
@@ -735,7 +735,7 @@ For each control, provide:
 
 **Required Access:**
 
-- AWS Knowledge MCP Server integration enabled in AI assistant
+- AWS MCP Server integration enabled in AI assistant
 - AWS account access (read-only sufficient for assessment)
 - Basic understanding of AWS services (EC2, RDS, S3, IAM)
 

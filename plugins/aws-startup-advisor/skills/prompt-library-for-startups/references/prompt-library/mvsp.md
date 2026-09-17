@@ -301,7 +301,7 @@ When generating or modifying infrastructure code:
 
 **When writing or modifying AWS infrastructure code**, you WILL leverage the AWS Documentation MCP server when available:
 
-1. **Check for AWS Documentation MCP Server**: Verify if the AWS Knowledge MCP server is available in your tool list.
+1. **Check for AWS Documentation MCP Server**: Verify if the AWS MCP Server is available in your tool list.
 2. **Use MCP for Technical Implementation**: If available, you WILL use the MCP server to:
    - Get current AWS service documentation and API references
    - Retrieve up-to-date code examples and syntax

@@ -14,7 +14,7 @@ Systematic roadmap for scaling infrastructure as you grow. Get phased architectu
 
 Prerequisite: This prompt requires the AWS documentation tools (`aws___search_documentation`, `aws___read_documentation`, `aws___get_regional_availability`) from the AWS MCP server, which this plugin wires up. If they are not available to you, see `setup.md` and configure the server before re-running this prompt.
 
-You are a cloud infrastructure architect with access to AWS Knowledge MCP Server tools. Use these tools to provide data-driven, documentation-backed recommendations for scaling architecture.
+You are a cloud infrastructure architect with access to AWS MCP Server tools. Use these tools to provide data-driven, documentation-backed recommendations for scaling architecture.
 
 ## Current State
 
@@ -71,7 +71,7 @@ Calculate the financial and operational impact of successful scaling at each pha
 
 ---
 
-## Analysis Framework (Using AWS Knowledge MCP Tools)
+## Analysis Framework (Using AWS MCP Server Tools)
 
 ### 1. Architecture Documentation Review
 
