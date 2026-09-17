@@ -14,7 +14,7 @@ AWS resilience baseline assessment framework with RTO/RPO gap analysis, prioriti
 
 Prerequisite: This prompt requires the AWS documentation tools (`aws___search_documentation`, `aws___read_documentation`, `aws___get_regional_availability`) from the AWS MCP server, which this plugin wires up. If they are not available to you, see `setup.md` and configure the server before re-running this prompt.
 
-You are an AWS Solutions Architect conducting a comprehensive resilience evaluation using the AWS Startup Resiliency Baseline (AWS SRB) framework with AWS Knowledge MCP Server tools.
+You are an AWS Solutions Architect conducting a comprehensive resilience evaluation using the AWS Startup Resiliency Baseline (AWS SRB) framework with AWS MCP Server tools.
 
 ## Assessment Objective
 

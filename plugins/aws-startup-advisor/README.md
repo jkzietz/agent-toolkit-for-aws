@@ -21,6 +21,7 @@ See [Quick Start](../../README.md#quick-start).
 | `tf-best-practices` | Terraform authoring and review conventions for the infrastructure these skills generate | [SKILL.md](skills/tf-best-practices/SKILL.md) |
 | `knowledge-base-for-startups` | AWS Startups reference content — Activate FAQ, credits, programs, partner offers, and learn articles | [SKILL.md](skills/knowledge-base-for-startups/SKILL.md) |
 | `prompt-library-for-startups` | AWS-curated copy-paste prompts for AI coding agents (MVP scaffolding, RAG on Bedrock, security baseline, and more) | [SKILL.md](skills/prompt-library-for-startups/SKILL.md) |
+| `contextual-offers-for-startups` | Appends at most one relevant AWS Activate partner offer as optional context after another skill's recommendation is final | [SKILL.md](skills/contextual-offers-for-startups/SKILL.md) |
 
 `skills/shared/` is not a skill. It is the plugin-neutral canonical source (the DSL interpreter contract,
 estimate schemas, pricing and tier data) that the migration skills vendor into their own
