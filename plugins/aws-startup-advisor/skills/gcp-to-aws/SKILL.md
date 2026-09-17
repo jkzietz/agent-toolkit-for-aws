@@ -233,11 +233,12 @@ Replace `MMDD-HHMM` with the actual migration ID, generate the `last_updated` IS
 
 ## MCP Servers
 
-**awspricing** (for cost estimation):
+**aws-mcp** (the AWS MCP server):
 
-- Provides `get_pricing`, `get_pricing_service_codes`, `get_pricing_service_attributes` tools
-- Only needed during Estimate phase. Discover and Design do not require it.
-- Primary pricing source: `references/shared/pricing-cache.md` (cached 2026 rates, ±5-10% for infrastructure, ±15-25% for AI models). MCP is secondary — used only for services not found in the cache.
+- `aws___search_documentation`, `aws___read_documentation`, `aws___get_regional_availability` — Design uses these to validate service and feature availability. No credentials needed.
+- `aws___run_script` → `call_boto3` — Estimate uses this to reach the AWS Price List API (`pricing.DescribeServices`, `pricing.GetAttributeValues`, `pricing.GetProducts`). Needs AWS credentials with `pricing:DescribeServices` and `pricing:GetProducts`.
+- Live pricing is only needed during Estimate. Discover and Design do not require it.
+- Primary pricing source: `references/shared/pricing-cache.md` (cached 2026 rates, ±5-10% for infrastructure, ±15-25% for AI models). The Price List API is secondary — used only for services not found in the cache.
 
 ---
 
@@ -332,7 +333,7 @@ gcp-to-aws/
 | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | No GCP sources found (no `.tf`, no app code, no billing data) | Offer live gcloud discovery per `discover.md` Step 1d. Only if declined or unavailable: Stop. Output: "No GCP sources detected. Provide at least one source type (Terraform files, application code, or billing exports), or re-run and accept live discovery." |
 | `.phase-status.json` missing phase gate                       | Stop. Output: "Cannot enter Phase X: Phase Y-1 not completed. Start from Phase Y or resume Phase Y-1."                                                                                                                                                          |
-| awspricing unavailable after 3 attempts                       | Display user warning about ±5-25% accuracy. Use `pricing-cache.md`. Add `pricing_source: "cached_fallback"` to the applicable `estimation-*.json` file.                                                                                                         |
+| Price List API unavailable after 3 attempts                       | Display user warning about ±5-25% accuracy. Use `pricing-cache.md`. Add `pricing_source: "cached_fallback"` to the applicable `estimation-*.json` file.                                                                                                         |
 | User skips questions or says "use defaults for the rest"      | Apply documented defaults for all remaining questions (essential questions and any unconfirmed sheet rows in wizard mode; current and subsequent batches in full mode). Q2/Q3 defaults add a report caveat. Phase 2 completes either way.                       |
 | `aws-design.json` missing required clusters                   | Stop Phase 4. Output: "Re-run Phase 3 to generate missing cluster designs."                                                                                                                                                                                     |
 

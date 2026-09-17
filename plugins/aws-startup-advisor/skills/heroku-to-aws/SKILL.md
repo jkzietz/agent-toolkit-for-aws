@@ -17,7 +17,7 @@ description: "Migrate workloads from Heroku to AWS. Triggers on: migrate from He
 - **Flat resource model**: Heroku resources are organized per-app without dependency graphs or clustering. No topological sorting, typed edges, or cluster formation logic. Resources are processed as a flat list in input order.
 - **Deterministic mappings**: Core services use fixed lookup tables (Dyno Type Table, Postgres Plan Table, Redis Plan Table, Kafka Plan Table). Common add-ons use the Fast-Path Table. Unknown add-ons hit the specialist gate.
 - **DMS has Heroku constraints**: AWS DMS cannot perform continuous replication (CDC) with Heroku Postgres because Heroku does not grant the REPLICATION role. DMS is for one-time bulk migration with a cutover window only. The skill must surface this constraint when DMS is selected.
-- **What-if after Estimate**: After costs are computed, SAs can enter an optional what-if workshop sidebar (`references/phases/workshop/workshop.md`) to change region, HA, compute target, or CPU architecture (x86 vs Graviton), refresh Design + Estimate, and compare up to 5 priced scenarios — without re-running Discover. Region dollar deltas need awspricing MCP; without it, rates stay us-east-1-cache-based. Workshop arch defaults to **x86_64** here (EB tables historically x86-first).
+- **What-if after Estimate**: After costs are computed, SAs can enter an optional what-if workshop sidebar (`references/phases/workshop/workshop.md`) to change region, HA, compute target, or CPU architecture (x86 vs Graviton), refresh Design + Estimate, and compare up to 5 priced scenarios — without re-running Discover. Region dollar deltas need the AWS Price List API; without it, rates stay us-east-1-cache-based. Workshop arch defaults to **x86_64** here (EB tables historically x86-first).
 
 ---
 
@@ -103,11 +103,11 @@ The `.migration/` directory is protected by a `.gitignore` created at init.
 
 ## MCP Servers
 
-**awspricing** (for cost estimation):
+**aws-mcp** (the AWS MCP server):
 
-- Provides `get_pricing`, `get_pricing_service_codes`, `get_pricing_service_attributes` tools
-- Only needed during Estimate phase. Discover and Design do not require it.
-- Primary pricing source: `references/vendored/pricing/aws-infra-pricing.json` (cached AWS infrastructure rates, ±5-10% for infrastructure). MCP is secondary — used only for services not found in the pricing file.
+- `aws___run_script` → `call_boto3` — Estimate uses this to reach the AWS Price List API (`pricing.DescribeServices`, `pricing.GetAttributeValues`, `pricing.GetProducts`). Needs AWS credentials with `pricing:DescribeServices` and `pricing:GetProducts`.
+- Live pricing is only needed during Estimate. Discover and Design do not require it.
+- Primary pricing source: `references/vendored/pricing/aws-infra-pricing.json` (cached AWS infrastructure rates, ±5-10% for infrastructure). The Price List API is secondary — used only for services not found in the pricing file.
 
 ---
 
@@ -166,7 +166,7 @@ heroku-to-aws/
 | Condition                                                | Action                                                                                                                                                                    |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.phase-status.json` missing phase gate                  | Stop. Output: "Cannot enter Phase X: Phase Y-1 not completed. Start from Phase Y or resume Phase Y-1."                                                                    |
-| awspricing unavailable after 3 attempts                  | Display user warning about ±5-10% accuracy. Use `references/vendored/pricing/aws-infra-pricing.json`. Add `pricing_source: "cached_fallback"` to `estimation-infra.json`. |
+| Price List API unavailable after 3 attempts                  | Display user warning about ±5-10% accuracy. Use `references/vendored/pricing/aws-infra-pricing.json`. Add `pricing_source: "cached_fallback"` to `estimation-infra.json`. |
 | User skips questions or says "use defaults for the rest" | Apply documented defaults for remaining questions. Phase 2 completes either way.                                                                                          |
 | Dyno type not in selected compute sizing table           | Reject mapping for that formation. Output: "Unsupported dyno type: {type}. Cannot map to target compute service."                                                         |
 | Add-on not in Fast-Path Table                            | Mark as "Deferred — specialist engagement". No automated mapping produced.                                                                                                |

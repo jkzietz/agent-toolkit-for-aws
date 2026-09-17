@@ -6,7 +6,7 @@ freshness lookups carry ONLY public service, feature, model, or region names (e.
 file contents, prompts, architecture details, or anything else from the workspace
 or the run directory in an outbound request — the answer never depends on it.
 
-## Fields to verify at runtime via the awsknowledge MCP
+## Fields to verify at runtime via the AWS MCP server
 
 - AgentCore microVMs session cap (currently 8h) and Instances session cap (currently 14d)
 - AgentCore microVMs compute cap (2 vCPU / 8 GB; Instances lifts it via EC2 choice)
@@ -18,8 +18,8 @@ or the run directory in an outbound request — the answer never depends on it.
 
 ## Temporal (design.md — Freshness, temporal units only)
 
-Volatile facts to re-verify when the Temporal branch generates a plan. The awsknowledge
-MCP does not cover Temporal-side facts; each fact below names its actual verification
+Volatile facts to re-verify when the Temporal branch generates a plan. The AWS MCP
+server does not cover Temporal-side facts; each fact below names its actual verification
 channel. Whatever cannot be verified this run stays cached and the footer must say so.
 
 **Temporal Knowledge Base MCP (preferred channel for Temporal-side facts):**
@@ -83,7 +83,7 @@ observed this run may be listed as verified.
    (`verify_via_mcp: true`) from the winning runtime's profile JSON; for **add-capabilities**
    (which has no winning runtime profile), the "Hard limits" facts in the relevant service card
    (agentcore.md) instead.
-2. Attempt an awsknowledge MCP lookup for each.
+2. Attempt an AWS MCP server documentation lookup for each.
 3. On success (the MCP call returned a value THIS run), use the fresh value and list the field as
    verified.
 4. On failure OR if you did not call the MCP at all (unavailable, skipped), use the cached

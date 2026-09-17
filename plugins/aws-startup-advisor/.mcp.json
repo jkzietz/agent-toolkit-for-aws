@@ -1,25 +1,13 @@
 {
   "mcpServers": {
-    "awsknowledge": {
-      "type": "http",
-      "url": "https://knowledge-mcp.global.api.aws"
-    },
-    "awspricing": {
+    "aws-mcp": {
       "command": "uvx",
       "args": [
-        "awslabs.aws-pricing-mcp-server@latest"
-      ],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_REGION": "us-east-1"
-      },
-      "timeout": 120000,
-      "type": "stdio",
-      "autoApprove": [
-        "get_pricing_service_codes",
-        "get_pricing_service_attributes",
-        "get_pricing_attribute_values",
-        "get_pricing"
+        "mcp-proxy-for-aws-cli@latest",
+        "https://aws-mcp.us-east-1.api.aws/mcp",
+        "--skip-auth",
+        "--metadata",
+        "INSTALL_SOURCE=agent-toolkit-startup-advisor"
       ]
     },
     "temporal-docs": {

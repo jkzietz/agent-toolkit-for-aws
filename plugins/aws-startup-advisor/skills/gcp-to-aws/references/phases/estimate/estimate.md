@@ -15,9 +15,10 @@ Read `shared/pricing-cache.md`. Check the `Last updated` date in the header:
 
 ### Step 0b: MCP Availability Check (only if cache stale or service not listed)
 
-Attempt to reach awspricing with **up to 2 retries** (3 total attempts):
+Attempt to reach the AWS Price List API with **up to 2 retries** (3 total attempts):
 
-1. **Attempt 1**: Call `get_pricing_service_codes()`
+1. **Attempt 1**: A `pricing.DescribeServices` probe through `aws___run_script` (see
+   `shared/../vendored/estimate/pricing-mode.md` for the canonical call)
 2. **If timeout/error**: Wait 1 second, retry (Attempt 2)
 3. **If still fails**: Wait 2 seconds, retry (Attempt 3)
 4. **If all 3 attempts fail**: Use cached prices with staleness warning
@@ -27,8 +28,8 @@ Attempt to reach awspricing with **up to 2 retries** (3 total attempts):
 **Before any sub-estimate file runs**, display the pricing mode to the user so they know what to expect:
 
 - **If cache ≤ 90 days and MCP not needed**: "Pricing source: cached (updated [date], ±5-25% accuracy). Live pricing API not required."
-- **If cache > 90 days and MCP available**: "Pricing source: live API (awspricing MCP). Cache is stale ([date]) — using real-time pricing."
-- **If cache > 90 days and MCP unavailable**: "⚠️ Pricing source: stale cache only (updated [date]). The awspricing MCP server is unreachable — ensure `uvx` is installed (`pip install uv` or `brew install uv`) and AWS credentials are configured. Proceeding with cached pricing; accuracy may be ±15-25% for AI models."
+- **If cache > 90 days and MCP available**: "Pricing source: live AWS Price List API (via the AWS MCP server). Cache is stale ([date]) — using real-time pricing."
+- **If cache > 90 days and MCP unavailable**: "⚠️ Pricing source: stale cache only (updated [date]). The AWS Price List API is unreachable — ensure `uvx` is installed (`pip install uv` or `brew install uv`) and AWS credentials are configured. Proceeding with cached pricing; accuracy may be ±15-25% for AI models."
 - **If cache ≤ 90 days but a required service is NOT in cache and MCP unavailable**: "⚠️ Some services not in pricing cache and MCP unreachable. Those services will show `pricing_source: unavailable` in the estimate."
 
 This prevents silent failures — the user sees the pricing constraint upfront, not after 5 minutes of estimation work.
@@ -38,7 +39,7 @@ This prevents silent failures — the user sees the pricing constraint upfront, 
 Each sub-estimate file uses this lookup order per service:
 
 1. **`shared/pricing-cache.md`** (primary) — Cached prices (±5-25% accuracy). Set `pricing_source: "cached"`. Used first because it requires zero API calls and covers most common services.
-2. **MCP API** (secondary) — Real-time pricing for services NOT in pricing-cache.md (±5-10% accuracy, more precise). Set `pricing_source: "live"`. Only called when the cache lacks the needed service or model. **Region note:** The `.mcp.json` sets `AWS_REGION=us-east-1` as the MCP server default, but each `get_pricing()` call accepts a `region` parameter that overrides it. Always pass the user's target region (from `preferences.json`) in MCP queries.
+2. **MCP API** (secondary) — Real-time pricing for services NOT in pricing-cache.md (±5-10% accuracy, more precise). Set `pricing_source: "live"`. Only called when the cache lacks the needed service or model. **Region note:** the Price List API endpoint only exists in `us-east-1`, `eu-central-1`, and `ap-south-1`, so `region_name` is always one of those — it is **not** the region being priced. Pass the user's target region (from `preferences.json`) as a `regionCode` `TERM_MATCH` filter instead. Using the target region as `region_name` either fails to connect or silently prices the wrong region.
 3. **Cache after MCP failure** — If MCP was attempted but failed (timeout, error), and the service IS in the cache, use the cached price. Set `pricing_source: "cached_fallback"`. This distinguishes intentional cache use from MCP failure recovery.
 4. **Unavailable** — If a service is NOT in the cache AND MCP is unavailable, set `pricing_source: "unavailable"` for that service. Add the service to `services_with_missing_fallback` and display a warning to the user: "Pricing unavailable for [service] — not in cache and MCP unreachable. Exclude from totals or provide a manual estimate."
 

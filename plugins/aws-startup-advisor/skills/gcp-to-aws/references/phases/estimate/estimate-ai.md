@@ -11,7 +11,7 @@ The parent `estimate.md` selects the pricing mode before loading this file.
 **Price lookup order:**
 
 1. **`shared/pricing-cache.md` (primary)** — Look up Bedrock model pricing and source provider pricing by table. Set `pricing_source: "cached"`.
-2. **MCP (secondary)** — If a model is NOT in pricing-cache.md and MCP is available, query `get_pricing("AmazonBedrock", ...)` with model filter and the user's target region. Set `pricing_source: "live"`.
+2. **MCP (secondary)** — If a model is NOT in pricing-cache.md and MCP is available, query `pricing.GetProducts` for `ServiceCode: "AmazonBedrock"` with a model filter and a `regionCode` filter set to the user's target region. Set `pricing_source: "live"`.
 3. **Cache after MCP failure** — If MCP was attempted but failed, and the model IS in the cache, use the cached price. Set `pricing_source: "cached_fallback"`.
 4. **Unavailable** — If a model is NOT in the cache AND MCP failed, set `pricing_source: "unavailable"` and warn the user.
 
@@ -123,7 +123,7 @@ Reference `aws-design-ai.json` → `honest_assessment`. If `"recommend_stay"`, p
 
 **Non-cost benefits to present:** usage counting toward existing AWS commitments, IAM/VPC/PrivateLink/KMS/CloudTrail governance, in-region processing for data residency, prompt caching (Claude, and GPT-5.6 at 90% off cached input with cached tokens exempt from the input-TPM quota), model flexibility (100+ models), AWS ecosystem (Guardrails, Knowledge Bases, AgentCore), and — for a same-model move — the elimination of behavior-delta and prompt-regression risk.
 
-**Pricing source caveat for OpenAI models:** the AWS Price List API does not carry the proprietary GPT-5.x models, so the `awspricing` MCP returns no rows for them. An empty result is **not** evidence the model is unavailable or free. Use `shared/pricing-cache.md`, and treat rows marked `unverified` there as blocking for any quoted figure — resolve them from the Bedrock pricing page first. See `shared/openai-on-bedrock.md`.
+**Pricing source caveat for OpenAI models:** the AWS Price List API does not carry the proprietary GPT-5.x models, so the AWS Price List API returns no rows for them. An empty result is **not** evidence the model is unavailable or free. Use `shared/pricing-cache.md`, and treat rows marked `unverified` there as blocking for any quoted figure — resolve them from the Bedrock pricing page first. See `shared/openai-on-bedrock.md`.
 
 **Note:** Human/professional-services one-time migration costs are intentionally out of scope for this advisor and excluded from ROI calculations.
 

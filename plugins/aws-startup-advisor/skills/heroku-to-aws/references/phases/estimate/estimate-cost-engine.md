@@ -660,7 +660,20 @@ write `estimation-infra.json`, run the handoff gate, and update phase status.
 
 ## Pricing Recipes (MCP Fallback Only)
 
-Only use these recipes when a service is NOT in `references/vendored/pricing/aws-infra-pricing.json` and MCP is available. Do NOT call `get_pricing_service_codes` or `get_pricing_service_attributes` — go directly to `get_pricing`.
+Only use these recipes when a service is NOT in `references/vendored/pricing/aws-infra-pricing.json` and MCP is available. Go directly to `pricing.GetProducts` — do not enumerate service codes or attributes first.
+
+**How to run a recipe.** Each row below is one `pricing.GetProducts` call issued through the
+AWS MCP server's `aws___run_script` tool, per `references/vendored/estimate/pricing-mode.md`:
+
+- `region_name` is always `us-east-1` (the Price List API endpoint), **never** the region
+  being priced. Add the target region as a `regionCode` filter instead.
+- Each `filters` entry needs an explicit `Type`. Rows that omit it are term matches, so add
+  `"Type": "TERM_MATCH"`; rows that already carry a `Type` (e.g. `ANY_OF`) pass it through.
+- `output_options` is not an API parameter. Do the equivalent in the script: read
+  `terms.OnDemand` for `pricing_terms`, pull the listed keys off `product.attributes` for
+  `product_attributes`, and drop `$0.0000000000` rates for `exclude_free_products`.
+- `PriceList` comes back as a list of JSON strings. Parse each one and return only the
+  extracted unit rate — never the raw payload.
 
 | AWS Service       | service_code      | filters                                                                                                     | output_options                                                                                                                                     |
 | ----------------- | ----------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
