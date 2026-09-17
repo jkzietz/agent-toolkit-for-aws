@@ -31,8 +31,7 @@ enforces that the copies stay byte-identical.
 
 | Server | Description |
 | --- | --- |
-| `awsknowledge` | AWS documentation search and skill retrieval via the AWS Knowledge MCP Server (no authentication) |
-| `awspricing` | AWS Price List queries, CDK/Terraform project cost analysis, and cost reports |
+| `aws-mcp` | The AWS MCP Server. Documentation search and skill retrieval (`aws___search_documentation`, `aws___read_documentation`, `aws___retrieve_skill`), region and feature availability (`aws___list_regions`, `aws___get_regional_availability`), and AWS Price List queries for cost estimates via `aws___run_script` → `call_boto3`. The documentation tools need no authentication; the pricing path needs AWS credentials |
 | `aws-pricing-calculator` | Builds shareable AWS Pricing Calculator estimates from a migration design |
 | `temporal-docs` | Temporal documentation search, used by the Temporal-worker migration paths |
 

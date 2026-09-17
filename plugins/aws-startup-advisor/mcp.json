@@ -1,20 +1,16 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
-    "awsknowledge": {
-      "type": "streamable-http",
-      "url": "https://knowledge-mcp.global.api.aws"
-    },
-    "awspricing": {
+    "aws-mcp": {
       "type": "stdio",
       "command": "uvx",
       "args": [
-        "awslabs.aws-pricing-mcp-server@latest"
-      ],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_REGION": "us-east-1"
-      }
+        "mcp-proxy-for-aws-cli@latest",
+        "https://aws-mcp.us-east-1.api.aws/mcp",
+        "--skip-auth",
+        "--metadata",
+        "INSTALL_SOURCE=agent-toolkit-startup-advisor"
+      ]
     },
     "temporal-docs": {
       "type": "streamable-http",
