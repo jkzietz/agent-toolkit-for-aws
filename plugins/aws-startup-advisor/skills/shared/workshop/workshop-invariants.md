@@ -72,8 +72,9 @@ reprice:
 
 ## 5. Region honesty
 
-The sheet always shows: region repricing needs live pricing access (awspricing
-MCP) for true regional rates; without it, numbers stay on the us-east-1 cache
+The sheet always shows: region repricing needs live pricing access (the AWS Price
+List API via the AWS MCP server, filtered on the target `regionCode`) for true
+regional rates; without it, numbers stay on the us-east-1 cache
 basis and every affected estimate carries a `region_note`. Never present
 cache-based numbers as regional.
 

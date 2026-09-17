@@ -1,14 +1,14 @@
 # Pricing Fallback
 
 > Loaded by `ai-migration-guardrails.md` as the tertiary pricing source when both
-> `pricing-cache.md` (primary) and the `awspricing` MCP server (secondary) are unavailable.
+> `pricing-cache.md` (primary) and the AWS Price List API (secondary) are unavailable.
 
 ## When This File Is Used
 
 Use this fallback **only** when:
 
 1. `pricing-cache.md` is stale (>30 days since `Last updated`) **and**
-2. The `awspricing` MCP `get_pricing` call fails or times out
+2. The live `pricing.GetProducts` call fails or times out
 
 ## Fallback Behavior
 
@@ -24,10 +24,15 @@ When this fallback is active:
 
 ## MCP Retry Path
 
-Before falling back to this file, attempt the MCP call with one retry:
+Before falling back to this file, attempt the Price List API once more through the AWS
+MCP server's `aws___run_script` tool:
 
-```
-get_pricing(service="bedrock", model_id="", region="")
+```python
+call_boto3(service_name="pricing", operation_name="GetProducts",
+           region_name="us-east-1",
+           params={"ServiceCode": "AmazonBedrock", "Filters": [
+               {"Type": "TERM_MATCH", "Field": "regionCode", "Value": "<target region>"},
+           ]})
 ```
 
 If the retry also fails, proceed with `pricing_source: "unavailable"` as above.
