@@ -20,8 +20,6 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const strict = process.argv.includes("--strict");
-// The plugin directory is resolved from this file's own location, so the report works
-// from any working directory. Pass a path to point it at another checkout instead.
 const PLUGIN = process.argv.slice(2).find((a) => !a.startsWith("-")) ?? resolve(import.meta.dirname, "..");
 const SKILLS = join(PLUGIN, "skills");
 const DEFAULT_WINDOW_DAYS = 30;

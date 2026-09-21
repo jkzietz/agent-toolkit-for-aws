@@ -18,8 +18,7 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
-// The plugin directory is resolved from this file's own location, so the script works
-// from any working directory. Pass a path to point it at another checkout instead.
+// Repo-root-relative locations. The script is invoked from the repo root (mise task).
 const PLUGIN = process.argv.slice(2).find((a) => !a.startsWith("-")) ?? resolve(import.meta.dirname, "..");
 const CANONICAL = join(PLUGIN, "skills/shared");
 const SKILLS_DIR = join(PLUGIN, "skills");

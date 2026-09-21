@@ -23,8 +23,8 @@
 //      segment -> skills/<segment>-to-aws; cross-check skipped when no such skill)
 //
 // Usage:
-//   node fixtures-check.ts            # check this plugin's own fixtures (mise task)
-//   node fixtures-check.ts <plugin>   # check another checkout's plugin dir (e.g. a PR worktree)
+//   node fixtures-check.ts            # check this plugin's fixtures (mise task)
+//   node fixtures-check.ts <plugin>   # check another checkout (e.g. a PR worktree)
 //
 // The plugin directory is resolved from this file's own location, so the checks are
 // independent of the working directory and of where the plugin sits in the repo.
