@@ -12,6 +12,8 @@ or the run directory in an outbound request — the answer never depends on it.
 - AgentCore microVMs compute cap (2 vCPU / 8 GB; Instances lifts it via EC2 choice)
 - AgentCore / AgentCore Instances / Lambda MicroVMs region availability (Instances
   launched 2026-08 in a limited region set)
+- AWS Agent Registry region availability when Registry is selected, independently of runtime
+  (`registry_regions` in `references/runtimes/agentcore.json`; see the procedure below)
 - Lambda MicroVMs launch TPS (5, not adjustable)
 - FedRAMP certification status for AgentCore and Lambda MicroVMs
 - Any Bedrock model price (defer to the `llm-to-bedrock` skill's pricing cache; never hardcode here)
@@ -83,7 +85,10 @@ observed this run may be listed as verified.
    (`verify_via_mcp: true`) from the winning runtime's profile JSON; for **add-capabilities**
    (which has no winning runtime profile), the "Hard limits" facts in the relevant service card
    (agentcore.md) instead.
-2. Attempt an AWS MCP server documentation lookup for each.
+   Check Registry facts only when `registry` is selected. In the main skill, include
+   `registry_regions` from `references/runtimes/agentcore.json` even if the winning runtime is
+   ECS, EKS, Lambda, or another runtime. In add-capabilities, use the Registry Hard limits entry.
+2. Attempt an AWS MCP server lookup for each.
 3. On success (the MCP call returned a value THIS run), use the fresh value and list the field as
    verified.
 4. On failure OR if you did not call the MCP at all (unavailable, skipped), use the cached
@@ -95,15 +100,37 @@ for a field — for any reason — it goes in the cached/fell-back list. Never c
 did not perform. If the MCP was not called at all, the verified list is empty and every field is
 cached.
 
+## AWS Agent Registry availability
+
+Apply this check whenever Registry is selected, regardless of the agent's runtime:
+
+1. Identify the intended Registry deployment Region. Use the user's stated Region; ask if it
+   is missing, unknown, `multi`, or `global`. Do not silently choose a Region.
+2. Refresh Registry availability via AWS MCP server using the procedure above. A Runtime
+   availability result cannot verify Registry. Keep the observed source and verification date
+   with the result; on failure retain the cached snapshot date and mark availability unconfirmed.
+3. If this run confirms availability in the intended Region, proceed. If unavailable, ask the
+   user to omit Registry or explicitly choose a supported Region after considering data
+   residency. Do not silently move Registry or change the compute runtime.
+4. If availability cannot be verified, keep Registry conditional and include an availability
+   warning; do not present it as available or ready to deploy. Ask whether to omit Registry or
+   leave the recommendation as a draft pending verification. Do not complete Design or
+   add-capabilities while a selected Registry's intended Region remains unavailable or unverified.
+
+The main flow records the result in `design.json.volatile_facts.registry_regions` and appends
+any warning, with the affected unit and Region, to `warnings` and `region_availability_note`.
+The add-capabilities branch records the Region, verification result, and any unresolved warning
+in `capabilities-recommendation.md`. Only a lookup observed this run counts as verified.
+
 ## Freshness footer template (append to every recommendation doc)
 
 Choose the wording that matches what actually happened:
 
 - If some fields were MCP-verified this run:
-  > _Generated `<DATE>`. Facts verified via AWS Knowledge MCP: `<list verified>`. Cached values used
+  > _Generated `<DATE>`. Facts verified via AWS MCP server: `<list verified>`. Cached values used
   > for: `<list cached>`. Limits and pricing change — verify against AWS docs before committing._
 - If the MCP was not called / unavailable:
-  > _Generated `<DATE>`. AWS Knowledge MCP not called this run; all facts are cached values —
+  > _Generated `<DATE>`. AWS MCP server not called this run; all facts are cached values —
   > verify against AWS docs before committing._
 
 The footer is a summary, not the only place a date belongs. A cached number quoted in the body —
