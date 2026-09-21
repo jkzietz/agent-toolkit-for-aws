@@ -1,0 +1,106 @@
+name: aws-startup-advisor
+
+# Gates owned by the aws-startup-advisor plugin. The repo-wide Build workflow covers
+# markdown, manifests, spec conformance, and secret scanning; these are the checks that
+# are specific to this plugin's content (its DSL frontmatter contract, its pinned model
+# ids, its replay fixtures, and its vendored-copy sync contract).
+#
+# Path-scoped on `push` and `pull_request` so a change anywhere else in the repository
+# does not pay for them. `merge_group` cannot take a `paths` filter in GitHub Actions, so
+# queued merges do run these checks regardless of what they touch.
+#
+# MUST NOT be added to the branch ruleset as a required status check: a path-filtered
+# workflow reports no status at all when it does not match, so any PR that leaves this
+# plugin untouched would wait on a check that never runs and could never merge.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/aws-startup-advisor/**"
+      - ".github/workflows/aws-startup-advisor.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "plugins/aws-startup-advisor/**"
+      - ".github/workflows/aws-startup-advisor.yml"
+  merge_group:
+  workflow_dispatch:
+
+# Cancel superseded PR runs; let push/merge_group runs complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Default to no permissions; grant minimally at the job level.
+permissions:
+  actions: none
+  attestations: none
+  checks: none
+  contents: none
+  deployments: none
+  discussions: none
+  id-token: none
+  issues: none
+  models: none
+  packages: none
+  pages: none
+  pull-requests: none
+  repository-projects: none
+  security-events: none
+  statuses: none
+
+defaults:
+  run:
+    working-directory: plugins/aws-startup-advisor
+
+jobs:
+  plugin-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+
+      # The DSL phase files are a program: their frontmatter declares what each phase
+      # reads, produces, and assembles. This validator is the grammar check for it.
+      - name: Validate DSL frontmatter
+        run: |
+          for skill in agent-advisor gcp-to-aws heroku-to-aws; do
+            node tools/frontmatter-validator/validate.ts "skills/$skill"
+          done
+
+      - name: Test the frontmatter validator
+        run: node --test tests/tools/frontmatter-validator.test.ts
+
+      - name: Type-check the plugin's TypeScript tools
+        run: npx --yes -p typescript@5 tsc --noEmit
+
+      # Skills pin Bedrock model ids; this fails on ids that are retired or malformed.
+      - name: Lint model ids
+        run: python3 tools/model-id-lint.py
+
+      # Each skill vendors skills/shared/ so the folder stays self-contained. This is the
+      # sync contract that keeps the copies byte-identical to the canonical source.
+      - name: Check vendored shared files
+        run: node tools/sync-vendored-shared.ts
+
+      - name: Check fixture integrity
+        run: node tools/fixtures-check.ts
+
+      - name: Run fixture asserters
+        run: python3 tools/run-asserters.py
+
+      - name: Run Python test suites
+        run: uv run --with pytest python -m pytest
+
+      - name: Scan Python with bandit
+        run: uv run --with 'bandit==1.9.3' bandit -r . -c bandit.yml -x ./tests
+
+      # Report-only: a stale pricing cache degrades estimate accuracy but must not fail
+      # unrelated PRs. `--strict` is for a scheduled freshness run, not this gate.
+      - name: Report pricing cache staleness
+        run: node tools/pricing-staleness.ts
