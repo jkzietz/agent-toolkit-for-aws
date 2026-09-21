@@ -25,8 +25,8 @@ See [Quick Start](../../README.md#quick-start).
 
 `skills/shared/` is not a skill. It is the plugin-neutral canonical source (the DSL interpreter contract,
 estimate schemas, pricing and tier data) that the migration skills vendor into their own
-`references/vendored/` trees so each skill folder stays self-contained. The copies are kept
-byte-identical to the canonical source.
+`references/vendored/` trees so each skill folder stays self-contained. `tools/sync-vendored-shared.ts`
+enforces that the copies stay byte-identical.
 
 ## MCP Servers
 
@@ -44,8 +44,11 @@ declares what it reads, what it produces, and how it is assembled from fragments
 is the program the agent interprets to run them. Phases write JSON artifacts to a run directory, so a
 migration survives context loss and can be resumed or audited.
 
+- [`docs/`](docs/) — DSL authoring guide and grammar
 - [`fixtures/`](fixtures/) — committed replay fixtures: canned captures, mid-pipeline seeds, expected-assertion
   documents, and the stdlib asserters that fresh-agent replays are checked against
+- [`tools/`](tools/) — the plugin's own gates: frontmatter validator, model-id lint, fixture integrity check,
+  vendored-shared sync check, and pricing-cache staleness report
 
 ## Customizing skills for your organization
 
